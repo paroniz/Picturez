@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "graphical-ai-app",
+    "slug": "graphical-ai-app",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "graphical-ai-app"
+}
