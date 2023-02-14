@@ -5,7 +5,12 @@
     "version": "1.0.0",
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e5ea52e0-4145-4508-8c91-27d534741e64"
+      }
+    }
   },
   "name": "graphical-ai-app"
 }
