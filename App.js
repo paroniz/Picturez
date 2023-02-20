@@ -8,6 +8,8 @@ import { Configuration, OpenAIApi } from "openai";
 import 'react-native-url-polyfill/auto';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+//import ImagePicker from 'react-native-image-picker';
+import DocumentPicker from 'react-native-document-picker';
 
 export default function App() {
   const [animalInput, setAnimalInput] = useState("");
@@ -39,7 +41,31 @@ export default function App() {
     setLoading(false);
   }
 
-  function downloadImage() {
+  async function onSubmit2(event, imageData = null) {
+    setLoading(true);
+    try {
+      const prompt = imageData
+        ? `Create an image of a ${animalInput}.\n\n${imageData}`
+        : `Create an image of a ${animalInput}.`;
+
+      const completion = await openai.createImage({
+        prompt,
+        n: 1,
+        size: "1024x1024",
+        //image: image,
+      });
+      setResult(completion.data);
+    } catch (error) {
+      if (error.response) {
+        console.error(error.response.status, error.response.data);
+      } else {
+        console.error(`Error with OpenAI API request: ${error.message}`);
+      }
+    }
+    setLoading(false);
+  }
+
+  function openInBrowser() {
     Linking.openURL(result.data[0].url);
   }
 
@@ -75,7 +101,34 @@ export default function App() {
     } catch (error) {
       console.error(error);
     }
+  }
 
+  async function pickImage() {
+    try {
+      const result = await DocumentPicker.pick({
+        type: [DocumentPicker.types.images],
+        copyToCacheDirectory: false,
+        multiple: false, // if you only want to select one image
+        destination: DocumentPicker.directoryCache
+      });
+
+      const imageUri = result[0].uri;
+
+      // Read the file data from the image URI
+      //const imageData = await FileSystem.readAsStringAsync(imageUri, { encoding: 'base64' });
+      const response = await fetch(imageUri);
+      const imageData = response.toString('base64');
+      //btoa(await response.blob());
+      //const imageData = await response.text();
+    
+      onSubmit2(null, imageData);
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        console.log('User cancelled image picker');
+      } else {
+        console.log('DocumentPicker Error: ', err);
+      }
+    }
   }
 
   return (
@@ -85,11 +138,12 @@ export default function App() {
         <TextInput
           style={styles.textInput}
           name="animal"
-          placeholder="Enter an animal"
+          placeholder="Enter magic"
           value={animalInput}
           onChangeText={text => setAnimalInput(text)}
         />
         <Button onPress={onSubmit} title="Generate picture" />
+        <Button onPress={pickImage} title="Select image" />
       </View>
 
       {loading ? (
@@ -100,7 +154,7 @@ export default function App() {
             <>
               <Image source={{ uri: result.data[0].url }} style={{ width: 200, height: 200 }} />
               <Button style={styles.tooComplicated2} onPress={onDownload} title="Download image" />
-              <Button style={styles.tooComplicated2} onPress={downloadImage} title="Open in browser" />
+              <Button style={styles.tooComplicated2} onPress={openInBrowser} title="Open in browser" />
             </>
           )}
           {/* <StatusBar style="auto" /> */}
