@@ -24,13 +24,38 @@ export default function App() {
   async function onSubmit(event) {
     event.preventDefault();
     setLoading(true);
+
     try {
       const completion = await openai.createImage({
         prompt: input,
         n: 1,
         size: "1024x1024",
       });
-      setResult(completion.data)
+
+      const fileUri = completion.data.data[0].url;
+      const fileExtension = fileUri.substr(fileUri.lastIndexOf('.') + 1);
+      const localUri = `${FileSystem.documentDirectory}generated-image.${fileExtension}`;
+
+      const downloadObject = FileSystem.createDownloadResumable(
+        fileUri,
+        localUri,
+        {},
+        (downloadProgress) => {
+          const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+          console.log(`Download progress: ${progress}`);
+        }
+      );
+
+      const downloadResult = await downloadObject.downloadAsync();
+      if (downloadResult.status === 200) {
+        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+        await MediaLibrary.createAlbumAsync('Picturez', asset, false);
+        console.log('Download complete');
+        await deleteFile(localUri); 
+        console.log('Delete complete')
+      } else {
+        console.log(`Download failed: HTTP status code ${downloadResult.status}`);
+      }
     } catch (error) {
       if (error.response) {
         console.error(error.response.status, error.response.data);
@@ -38,8 +63,52 @@ export default function App() {
         console.error(`Error with OpenAI API request: ${error.message}`);
       }
     }
+
     setLoading(false);
   }
+
+
+  //WORKING
+  // async function onSubmitWithAutoMoveToPictures(event) {
+  //   event.preventDefault();
+  //   setLoading(true);
+  //   try {
+  //     const completion = await openai.createImage({
+  //       prompt: input,
+  //       n: 1,
+  //       size: "1024x1024",
+  //     });
+  //     const fileUri = completion.data.data[0].url;
+  //     const fileExtension = fileUri.substr(fileUri.lastIndexOf('.') + 1);
+  //     const localUri = `${FileSystem.documentDirectory}generated-image.${fileExtension}`;
+  //     const downloadsUri = FileSystem.downloadDirectory + `generated-image.${fileExtension}`;
+  //     const downloadObject = FileSystem.createDownloadResumable(
+  //       fileUri,
+  //       localUri,
+  //       {},
+  //       (downloadProgress) => {
+  //         const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+  //         console.log(`Download progress: ${progress}`);
+  //       }
+  //     );
+  //     const result = await downloadObject.downloadAsync();
+  //     if (result.status === 200) {
+  //       const asset = await MediaLibrary.createAssetAsync(result.uri);
+  //       await MediaLibrary.createAlbumAsync('Picturez', asset, false);
+  //       console.log('Download complete');
+  //     } else {
+  //       console.log(`Download failed: HTTP status code ${result.status}`);
+  //     }
+  //     setResult(completion.data);
+  //   } catch (error) {
+  //     if (error.response) {
+  //       console.error(error.response.status, error.response.data);
+  //     } else {
+  //       console.error(`Error with OpenAI API request: ${error.message}`);
+  //     }
+  //   }
+  //   setLoading(false);
+  // }
 
   // async function onSubmit2(event, imageData = null) {
   //   setLoading(true);
@@ -96,6 +165,7 @@ export default function App() {
         const asset = await MediaLibrary.createAssetAsync(result.uri);
         await MediaLibrary.createAlbumAsync('Picturez', asset, false);
         console.log('Download complete');
+        await deleteFile(localUri); 
       } else {
         console.log(`Download failed: HTTP status code ${result.status}`);
       }
@@ -103,6 +173,16 @@ export default function App() {
       console.error(error);
     }
   }
+
+  async function deleteFile(localUri) {
+    try {
+      await FileSystem.deleteAsync(localUri);
+      console.log('File deleted successfully');
+    } catch (error) {
+      console.log(`Error deleting file: ${error}`);
+    }
+  }
+
 
   // async function pickImage() {
   //   try {
