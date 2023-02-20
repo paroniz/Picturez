@@ -41,29 +41,30 @@ export default function App() {
     setLoading(false);
   }
 
-  async function onSubmit2(event, imageData = null) {
-    setLoading(true);
-    try {
-      const prompt = imageData
-        ? `Create an image of a ${animalInput}.\n\n${imageData}`
-        : `Create an image of a ${animalInput}.`;
+  // async function onSubmit2(event, imageData = null) {
+  //   setLoading(true);
+  //   try {
+  //     const prompt = imageData
+  //       ? `Create an image of a ${animalInput}.\n\n${imageData}`
+  //       : `Create an image of a ${animalInput}.`;
 
-      const completion = await openai.createImage({
-        prompt,
-        n: 1,
-        size: "1024x1024",
-        //image: image,
-      });
-      setResult(completion.data);
-    } catch (error) {
-      if (error.response) {
-        console.error(error.response.status, error.response.data);
-      } else {
-        console.error(`Error with OpenAI API request: ${error.message}`);
-      }
-    }
-    setLoading(false);
-  }
+  //       console.log(prompt)
+  //     const completion = await openai.createImage({
+  //       prompt,
+  //       n: 1,
+  //       size: "1024x1024",
+  //       //image: image,
+  //     });
+  //     setResult(completion.data);
+  //   } catch (error) {
+  //     if (error.response) {
+  //       console.error(error.response.status, error.response.data);
+  //     } else {
+  //       console.error(`Error with OpenAI API request: ${error.message}`);
+  //     }
+  //   }
+  //   setLoading(false);
+  // }
 
   function openInBrowser() {
     Linking.openURL(result.data[0].url);
@@ -93,7 +94,7 @@ export default function App() {
       const result = await downloadObject.downloadAsync();
       if (result.status === 200) {
         const asset = await MediaLibrary.createAssetAsync(result.uri);
-        await MediaLibrary.createAlbumAsync('Download', asset, false);
+        await MediaLibrary.createAlbumAsync('Picturez', asset, false);
         console.log('Download complete');
       } else {
         console.log(`Download failed: HTTP status code ${result.status}`);
@@ -103,37 +104,49 @@ export default function App() {
     }
   }
 
-  async function pickImage() {
-    try {
-      const result = await DocumentPicker.pick({
-        type: [DocumentPicker.types.images],
-        copyToCacheDirectory: false,
-        multiple: false, // if you only want to select one image
-        destination: DocumentPicker.directoryCache
-      });
+  // async function pickImage() {
+  //   try {
+  //     const result = await DocumentPicker.pick({
+  //       type: [DocumentPicker.types.images],
+  //       copyToCacheDirectory: false,
+  //       multiple: false, // if you only want to select one image
+  //       destination: DocumentPicker.directoryCache
+  //     });
 
-      const imageUri = result[0].uri;
+  //     const imageUri = result[0].uri;
 
-      // Read the file data from the image URI
-      //const imageData = await FileSystem.readAsStringAsync(imageUri, { encoding: 'base64' });
-      const response = await fetch(imageUri);
-      const imageData = response.toString('base64');
-      //btoa(await response.blob());
-      //const imageData = await response.text();
-    
-      onSubmit2(null, imageData);
-    } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        console.log('User cancelled image picker');
-      } else {
-        console.log('DocumentPicker Error: ', err);
-      }
-    }
-  }
+  //     // Read the file data from the image URI
+  //     //const imageData = await FileSystem.readAsStringAsync(imageUri, { encoding: 'base64' });
+  //     const response = await fetch(imageUri);
+  //     const blob = await response.blob();
+
+  //     // Use a FileReader to read the file as a data URL
+  //     const reader = new FileReader();
+  //     reader.readAsDataURL(blob);
+
+  //     // Wait for the reader to finish reading the file
+  //     const imageData = await new Promise((resolve, reject) => {
+  //       reader.onload = () => resolve(reader.result);
+  //       reader.onerror = reject;
+  //     });
+
+  //     // Extract the base64-encoded data from the data URL
+  //     const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+
+  //     onSubmit2(null, base64Data);
+  //   } catch (err) {
+  //     if (DocumentPicker.isCancel(err)) {
+  //       console.log('User cancelled image picker');
+  //     } else {
+  //       console.log('DocumentPicker Error: ', err);
+  //     }
+  //   }
+  // }
 
   return (
     <View style={styles.container}>
-      <Text>Magical picture generator</Text>
+      <Text style={styles.tooComplicated2}>Picturez</Text>
+      <Text style={styles.tooComplicated}>Magical picture generator</Text>
       <View>
         <TextInput
           style={styles.textInput}
@@ -143,7 +156,7 @@ export default function App() {
           onChangeText={text => setAnimalInput(text)}
         />
         <Button onPress={onSubmit} title="Generate picture" />
-        <Button onPress={pickImage} title="Select image" />
+        {/* <Button onPress={pickImage} title="Select image" /> */}
       </View>
 
       {loading ? (
@@ -153,7 +166,7 @@ export default function App() {
           {result && result.data && result.data.length > 0 && (
             <>
               <Image source={{ uri: result.data[0].url }} style={{ width: 200, height: 200 }} />
-              <Button style={styles.tooComplicated2} onPress={onDownload} title="Download image" />
+              <Button style={styles.tooComplicated2} onPress={onDownload} title="Save to media folder" />
               <Button style={styles.tooComplicated2} onPress={openInBrowser} title="Open in browser" />
             </>
           )}
@@ -180,9 +193,10 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   tooComplicated: {
-    paddingTop: 20
+    marginTop: 20
   },
   tooComplicated2: {
-    paddingTop: 20
+    fontSize: 24,
+    fontWeight: 'bold'
   }
 });
