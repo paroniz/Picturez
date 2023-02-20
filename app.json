@@ -10,6 +10,11 @@
       "eas": {
         "projectId": "e5ea52e0-4145-4508-8c91-27d534741e64"
       }
+    },
+    "android": {
+      "permissions": [
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     }
   },
   "name": "graphical-ai-app"
