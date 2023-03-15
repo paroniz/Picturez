@@ -16,7 +16,7 @@ export default function App() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const configuration = new Configuration({
-    apiKey: "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",
+    apiKey: "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",
   });
   const openai = new OpenAIApi(configuration);
   const input = `${animalInput}`;
